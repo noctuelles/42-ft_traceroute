@@ -6,7 +6,7 @@
 #    By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/05 11:17:26 by plouvel           #+#    #+#              #
-#    Updated: 2024/06/22 22:43:36 by plouvel          ###   ########.fr        #
+#    Updated: 2024/06/22 23:27:22 by plouvel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,6 +31,7 @@ ALL_INCLUDE=$(PROJECT_INCLUDE) $(UNITY_INCLUDE)
 # Sources
 
 SRCS=main.c \
+     parse_opts.c
 
 TESTS=
 
@@ -46,7 +47,7 @@ HEADS=$(addprefix -I, $(INCLUDES_DIR))
 
 # Compilation
 
-NAME=ft_nm
+NAME=ft_traceroute
 
 CC=gcc
 LINK=gcc
@@ -103,7 +104,7 @@ $(BUILD_PATH)/test_%.$(TARGET_EXTENSION): $(OBJS_PATH)/test_%.o $(OBJS_PATH)/uni
 # Rule to compile the files of the project
 $(OBJS_PATH)/%.o:: $(SRCS_PATH)/%.c
 	@$(MKDIR) $(dir $@)
-	$(CC) $(CFLAGS) $(DEBUG_FLAGS) $(PROJECT_INCLUDE) -DBYTE_ORDER=$(BYTE_ORDER) -c $< -o $@
+	$(CC) $(CFLAGS) $(DEBUG_FLAGS) $(PROJECT_INCLUDE) -c $< -o $@
 
 # Rule to compile the Unity Framework
 $(OBJS_PATH)/%.o:: $(UNITY_PATH)/%.c $(UNITY_PATH)/%.h | $(OBJS_PATH)
@@ -111,7 +112,7 @@ $(OBJS_PATH)/%.o:: $(UNITY_PATH)/%.c $(UNITY_PATH)/%.h | $(OBJS_PATH)
 
 # Rule to compile the tests of the project
 $(OBJS_PATH)/%.o:: $(TESTS_PATH)/%.c | $(OBJS_PATH)
-	$(CC) $(DEBUG_FLAGS) $(ALL_INCLUDE) -DBYTE_ORDER=$(BYTE_ORDER) -c $< -o $@
+	$(CC) $(DEBUG_FLAGS) $(ALL_INCLUDE) -c $< -o $@
 
 $(LIBFT):
 	$(MAKE) -C $(LIBFT_PATH)
