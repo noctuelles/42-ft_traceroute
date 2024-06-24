@@ -6,15 +6,20 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:43:13 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/24 13:42:26 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/24 20:13:00 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <stdio.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #include "ft_args_parser.h"
 #include "ft_traceroute.h"
 #include "parse_opts.h"
+#include "socket.h"
+
+t_opts g_opts = {0};
 
 extern const char *program_invocation_short_name;
 
@@ -34,9 +39,7 @@ static t_args_parser_option_entry opt_entries[] = {
      .description                   = "display this help and exit"},
 };
 
-t_opts g_opts = {0};
-
-int
+static int
 print_help(const t_args_parser_config *config) {
     printf("Usage: %s [OPTION]... HOST\n", program_invocation_short_name);
     printf("Print the route packets trace to network host.\n\n");
@@ -45,21 +48,38 @@ print_help(const t_args_parser_config *config) {
     return (0);
 }
 
+#include <netinet/in.h>
+
 int
 main(int argc, char **argv) {
-    char                *host   = NULL;
-    t_args_parser_config config = {.argc                      = argc,
-                                   .argv                      = argv,
-                                   .entries                   = opt_entries,
-                                   .entries_nbr               = sizeof(opt_entries) / sizeof(t_args_parser_option_entry),
-                                   .input                     = &host,
-                                   .default_argument_parse_fn = parse_argument};
+    char                *host     = NULL;
+    t_args_parser_config config   = {.argc                      = argc,
+                                     .argv                      = argv,
+                                     .entries                   = opt_entries,
+                                     .entries_nbr               = sizeof(opt_entries) / sizeof(t_args_parser_option_entry),
+                                     .input                     = &host,
+                                     .default_argument_parse_fn = parse_argument};
+    t_fd_sock            res_host = {0};
+    t_fd_sock            peer     = {0};
 
     if (ft_args_parser(&config) == -1) {
         return (1);
     }
     if (g_opts.help) {
         return (print_help(&config));
+    }
+    if (resolve_host(host, &res_host) == -1) {
+        return (1);
+    }
+    if (set_sockopts(res_host.fd) == -1) {
+        return (1);
+    }
+    ((struct sockaddr_in *)&res_host.addr)->sin_port = htons(DFT_PORT);
+    if (new_icmp_sock(&peer) == -1) {
+        return (1);
+    }
+    if (traceroute(&res_host, &peer) == -1) {
+        return (1);
     }
     return (0);
 }
