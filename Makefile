@@ -6,7 +6,7 @@
 #    By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/05 11:17:26 by plouvel           #+#    #+#              #
-#    Updated: 2024/06/22 23:27:22 by plouvel          ###   ########.fr        #
+#    Updated: 2024/06/24 14:07:53 by plouvel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,6 +31,7 @@ ALL_INCLUDE=$(PROJECT_INCLUDE) $(UNITY_INCLUDE)
 # Sources
 
 SRCS=main.c \
+	 socket.c \
      parse_opts.c
 
 TESTS=
