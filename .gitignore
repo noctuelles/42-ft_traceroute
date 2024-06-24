@@ -8,4 +8,4 @@
 !.clang-format
 !.gitignore
 !.gitsubmodules
-en.subject.pdf
+!en.subject.pdf
