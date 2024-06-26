@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:43:13 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/26 15:15:17 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/26 16:13:58 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,12 +25,13 @@
 #include "wrapper.h"
 
 t_opts g_opts = {
-    .port      = DFT_PORT,
-    .first_hop = DFT_FIRST_HOP,
-    .max_hops  = DFT_MAX_HOPS,
-    .wait_time = DFT_WAIT_TIME_SEC,
-    .tries     = DFT_TRIES,
-    .help      = false,
+    .port             = DFT_PORT,
+    .first_hop        = DFT_FIRST_HOP,
+    .max_hops         = DFT_MAX_HOPS,
+    .wait_time        = DFT_WAIT_TIME_SEC,
+    .tries            = DFT_TRIES,
+    .help             = false,
+    .resolve_hostname = true,
 };
 
 extern const char *program_invocation_short_name;
@@ -71,7 +72,7 @@ main(int argc, char **argv) {
                                    .default_argument_parse_fn = parse_argument};
     struct addrinfo     *res    = NULL;
     int                  ret    = 1;
-    t_trace_res          trace  = {0};
+    t_trace_res          trace  = {.sa_len = sizeof(struct sockaddr_in)};
 
     if (ft_args_parser(&config) == -1) {
         return (1);
@@ -89,24 +90,27 @@ main(int argc, char **argv) {
         goto clean_fd_send;
     }
     trace.sa_send = (struct sockaddr_in *)res->ai_addr;
-    if ((trace.sa_recv = Calloc(1, sizeof(trace.sa_recv))) == NULL) {
+    if ((trace.sa_recv = Calloc(1, trace.sa_len)) == NULL) {
         goto clean_fd_recv;
     }
-    if ((trace.sa_bind = Calloc(1, sizeof(trace.sa_bind))) == NULL) {
+    if ((trace.sa_bind = Calloc(1, trace.sa_len)) == NULL) {
         goto clean_sa;
     }
-    if ((trace.sa_last = Calloc(1, sizeof(trace.sa_last))) == NULL) {
+    if ((trace.sa_last = Calloc(1, trace.sa_len)) == NULL) {
         goto clean_sa;
     }
     trace.sa_bind->sin_family = trace.sa_send->sin_family;
     trace.sa_bind->sin_port   = htons((getpid() & 0xffff) | (1U << 15));
-    if (Bind(trace.fd_send, (const struct sockaddr *)trace.sa_bind, sizeof(*trace.sa_bind)) == -1) {
+    if (Bind(trace.fd_send, (const struct sockaddr *)trace.sa_bind, trace.sa_len) == -1) {
         goto clean_sa;
     }
     if ((host = in_sock_ntop(trace.sa_send)) == NULL) {
         goto clean_sa;
     }
     printf("traceroute to %s (%s), %u hops max\n", res->ai_canonname != NULL ? res->ai_canonname : host, host, g_opts.max_hops);
+    if (ft_traceloop(&trace) != 0) {
+        goto clean_sa;
+    }
     ret = 0;
 clean_sa:
     free(trace.sa_recv);
@@ -119,5 +123,5 @@ clean_fd_send:
 clean_res:
     freeaddrinfo(res);
 end:
-    return (1);
+    return (ret);
 }

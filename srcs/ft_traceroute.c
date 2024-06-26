@@ -6,26 +6,19 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 18:31:09 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/26 15:15:17 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/26 16:13:39 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_traceroute.h"
 
-#include <arpa/inet.h>
-#include <errno.h>
+#include <netdb.h>
 #include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
-#include <netinet/udp.h>
-#include <stddef.h>
 #include <stdio.h>
-#include <string.h>
-#include <sys/select.h>
 #include <sys/socket.h>
 
-#include "icmp.h"
 #include "libft.h"
-#include "socket.h"
+#include "wrapper.h"
 
 // static int
 // send_probe(int fd, int ttl, const struct sockaddr *sa, socklen_t slen) {
@@ -87,5 +80,74 @@
 //     return (0);
 // }
 
+static t_res_code
+recv_packet(t_trace_res *trace_res) {
+    uint8_t   payload[IP_MAXPACKET] = {0};
+    socklen_t sa_len                = trace_res->sa_len;
+
+    if (Recvfrom(trace_res->fd_recv, payload, sizeof(payload), 0, (struct sockaddr *)trace_res->sa_recv, &sa_len) == -1) {
+        return (RES_CODE_INTERAL_ERR);
+    }
+    (void)sa_len;
+
+    return (RES_CODE_KEEP_GOING);
+}
+
+static t_res_code
+await_response(t_trace_res *trace_res) {
+    fd_set         readfds;
+    struct timeval timeout;
+    t_res_code     ret = 0;
+
+    FD_ZERO(&readfds);
+    FD_SET(trace_res->fd_recv, &readfds);
+    timeout.tv_sec  = g_opts.wait_time != 0 ? g_opts.wait_time : DFT_WAIT_TIME_SEC;
+    timeout.tv_usec = 0;
+
+    if ((ret = Select(trace_res->fd_recv + 1, &readfds, NULL, NULL, &timeout)) == -1) {
+        return (RES_CODE_INTERAL_ERR);
+    } else if (ret == 0) {
+        return (RES_CODE_TIMEOUT);
+    }
+    return (recv_packet(trace_res));
+}
+
 int
-ft_traceloop(t_trace_res *trace_res) {}
+ft_traceloop(t_trace_res *trace_res) {
+    t_res_code ret              = 0;
+    char       host[NI_MAXHOST] = {0};
+
+    for (int nhops = g_opts.first_hop; nhops < g_opts.max_hops; nhops++) {
+        if (Setsockopt(trace_res->fd_send, IPPROTO_IP, IP_TTL, &nhops, sizeof(nhops)) == -1) {
+            return (-1);
+        }
+        ft_bzero(trace_res->sa_last, trace_res->sa_len);
+        printf("%2d ", nhops);
+        fflush(stdout);
+        for (uint32_t nprobe = 0; nprobe < g_opts.tries; nprobe++) {
+            trace_res->sa_send->sin_port = htons(g_opts.port);
+            if (Sendto(trace_res->fd_send, PROBE_CONTENT, sizeof(PROBE_CONTENT), 0, (const struct sockaddr *)trace_res->sa_send,
+                       trace_res->sa_len) == -1) {
+                return (-1);
+            }
+            ret = await_response(trace_res);
+            if (ret == RES_CODE_INTERAL_ERR) {
+                return (-1);
+            } else if (ret == RES_CODE_TIMEOUT) {
+                printf(" *");
+            } else {
+                if (ft_memcmp(trace_res->sa_last, trace_res->sa_recv, trace_res->sa_len) != 0) {
+                    printf(" %s", in_sock_ntop(trace_res->sa_recv));
+                    if (g_opts.resolve_hostname &&
+                        getnameinfo((const struct sockaddr *)trace_res->sa_recv, trace_res->sa_len, host, sizeof(host), NULL, 0, 0) == 0) {
+                        printf(" (%s)", host);
+                    }
+                    ft_memcpy(trace_res->sa_last, trace_res->sa_recv, trace_res->sa_len);
+                }
+            }
+            fflush(stdout);
+        }
+        printf("\n");
+    }
+    return (0);
+}

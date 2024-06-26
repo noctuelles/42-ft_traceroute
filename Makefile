@@ -6,7 +6,7 @@
 #    By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/05 11:17:26 by plouvel           #+#    #+#              #
-#    Updated: 2024/06/26 11:23:24 by plouvel          ###   ########.fr        #
+#    Updated: 2024/06/26 14:21:33 by plouvel          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,6 +34,7 @@ SRCS=main.c \
 	 socket.c \
 	 icmp.c \
      parse_opts.c \
+	 wrapper.c \
 	 ft_traceroute.c \
 
 TESTS=

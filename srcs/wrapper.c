@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/26 13:37:44 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/26 15:17:29 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/26 15:26:32 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,28 @@ Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct ti
 
     if ((ret = select(nfds, readfds, writefds, exceptfds, timeout)) == -1) {
         ft_error(0, errno, "select");
+    }
+
+    return (ret);
+}
+
+int
+Setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen) {
+    int ret = 0;
+
+    if ((ret = setsockopt(sockfd, level, optname, optval, optlen)) == -1) {
+        ft_error(0, errno, "setsockopt");
+    }
+
+    return (ret);
+}
+
+ssize_t
+Sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) {
+    ssize_t ret = 0;
+
+    if ((ret = sendto(sockfd, buf, len, flags, dest_addr, addrlen)) == -1) {
+        ft_error(0, errno, "sendto");
     }
 
     return (ret);
