@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 13:42:20 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/24 20:14:51 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/26 11:15:25 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 #include "socket.h"
 
+#include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -23,26 +24,6 @@
 
 #include "ft_traceroute.h"
 #include "libft.h"
-
-/**
- * @brief Set the socket options for the given socket file descriptor for the traceroute program.
- *
- * @param sock_fd Socket file descriptor.
- * @return int -1 if an error occured, 0 otherwise.
- */
-int
-set_sockopts(int sock_fd) {
-    int ttl = DFT_FIRST_HOP;
-
-    if (g_opts.first_hop != 0) {
-        ttl = (int)g_opts.first_hop;
-    }
-    if (setsockopt(sock_fd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1) {
-        ft_error(0, 0, "setsockopt: %s", strerror(errno));
-        return (-1);
-    }
-    return (0);
-}
 
 /**
  * @brief Resolve a hostname to a socket file descriptor and a sockaddr structure.
@@ -69,10 +50,11 @@ resolve_host(const char *host, t_fd_sock *res_host) {
     while (elem_res != NULL) {
         ret = socket(elem_res->ai_family, elem_res->ai_socktype, 0);
         if (ret != -1) {
-            res_host->fd      = ret;
-            res_host->addr    = *elem_res->ai_addr;
-            res_host->addrlen = elem_res->ai_addrlen;
-            ret               = 0;
+            res_host->fd   = ret;
+            res_host->addr = *(struct sockaddr_in *)elem_res->ai_addr;
+            res_host->name = host;
+            (void)inet_ntop(AF_INET, &res_host->addr.sin_addr, res_host->ipv4, sizeof(res_host->ipv4));
+            ret = 0;
             break;
         }
         elem_res = elem_res->ai_next;
@@ -91,6 +73,5 @@ new_icmp_sock(t_fd_sock *peer) {
         return (-1);
     }
     ft_bzero(&peer->addr, sizeof(peer->addr));
-    peer->addrlen = 0;
     return (0);
 }

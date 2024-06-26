@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:43:13 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/24 20:13:00 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/26 11:58:14 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,14 @@
 #include "parse_opts.h"
 #include "socket.h"
 
-t_opts g_opts = {0};
+t_opts g_opts = {
+    .port      = DFT_PORT,
+    .first_hop = DFT_FIRST_HOP,
+    .max_hops  = DFT_MAX_HOPS,
+    .wait_time = DFT_WAIT_TIME_SEC,
+    .tries     = DFT_TRIES,
+    .help      = false,
+};
 
 extern const char *program_invocation_short_name;
 
@@ -48,8 +55,6 @@ print_help(const t_args_parser_config *config) {
     return (0);
 }
 
-#include <netinet/in.h>
-
 int
 main(int argc, char **argv) {
     char                *host     = NULL;
@@ -68,16 +73,16 @@ main(int argc, char **argv) {
     if (g_opts.help) {
         return (print_help(&config));
     }
-    if (resolve_host(host, &res_host) == -1) {
-        return (1);
-    }
-    if (set_sockopts(res_host.fd) == -1) {
-        return (1);
-    }
-    ((struct sockaddr_in *)&res_host.addr)->sin_port = htons(DFT_PORT);
+
     if (new_icmp_sock(&peer) == -1) {
         return (1);
     }
+
+    if (resolve_host(host, &res_host) == -1) {
+        return (1);
+    }
+    ((struct sockaddr_in *)&res_host.addr)->sin_port = htons(g_opts.port);
+
     if (traceroute(&res_host, &peer) == -1) {
         return (1);
     }
