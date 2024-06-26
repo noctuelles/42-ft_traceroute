@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:51:08 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/26 11:56:46 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/26 15:15:31 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <sys/socket.h>
 #include <time.h>
 
 #include "socket.h"
@@ -37,8 +38,17 @@ typedef struct s_opts {
     bool     help;      /* display help message. -h --help */
 } t_opts;
 
+typedef struct s_trace_res {
+    int                 fd_recv;
+    int                 fd_send;
+    struct sockaddr_in *sa_recv;
+    struct sockaddr_in *sa_send;
+    struct sockaddr_in *sa_bind;
+    struct sockaddr_in *sa_last;
+} t_trace_res;
+
 extern t_opts g_opts;
 
-int traceroute(const t_fd_sock *res_host, t_fd_sock *peer);
+int ft_traceloop(t_trace_res *trace_res);
 
 #endif

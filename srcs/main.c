@@ -6,18 +6,23 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:43:13 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/26 11:58:14 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/26 15:15:17 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "ft_args_parser.h"
 #include "ft_traceroute.h"
 #include "parse_opts.h"
 #include "socket.h"
+#include "wrapper.h"
 
 t_opts g_opts = {
     .port      = DFT_PORT,
@@ -57,15 +62,16 @@ print_help(const t_args_parser_config *config) {
 
 int
 main(int argc, char **argv) {
-    char                *host     = NULL;
-    t_args_parser_config config   = {.argc                      = argc,
-                                     .argv                      = argv,
-                                     .entries                   = opt_entries,
-                                     .entries_nbr               = sizeof(opt_entries) / sizeof(t_args_parser_option_entry),
-                                     .input                     = &host,
-                                     .default_argument_parse_fn = parse_argument};
-    t_fd_sock            res_host = {0};
-    t_fd_sock            peer     = {0};
+    const char          *host   = NULL;
+    t_args_parser_config config = {.argc                      = argc,
+                                   .argv                      = argv,
+                                   .entries                   = opt_entries,
+                                   .entries_nbr               = sizeof(opt_entries) / sizeof(t_args_parser_option_entry),
+                                   .input                     = &host,
+                                   .default_argument_parse_fn = parse_argument};
+    struct addrinfo     *res    = NULL;
+    int                  ret    = 1;
+    t_trace_res          trace  = {0};
 
     if (ft_args_parser(&config) == -1) {
         return (1);
@@ -73,18 +79,45 @@ main(int argc, char **argv) {
     if (g_opts.help) {
         return (print_help(&config));
     }
-
-    if (new_icmp_sock(&peer) == -1) {
-        return (1);
+    if ((res = res_host_serv(host, NULL, AF_INET, SOCK_DGRAM)) == NULL) {
+        goto end;
     }
-
-    if (resolve_host(host, &res_host) == -1) {
-        return (1);
+    if ((trace.fd_send = Socket(res->ai_family, res->ai_socktype, 0)) == -1) {
+        goto clean_res;
     }
-    ((struct sockaddr_in *)&res_host.addr)->sin_port = htons(g_opts.port);
-
-    if (traceroute(&res_host, &peer) == -1) {
-        return (1);
+    if ((trace.fd_recv = Socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) == -1) {
+        goto clean_fd_send;
     }
-    return (0);
+    trace.sa_send = (struct sockaddr_in *)res->ai_addr;
+    if ((trace.sa_recv = Calloc(1, sizeof(trace.sa_recv))) == NULL) {
+        goto clean_fd_recv;
+    }
+    if ((trace.sa_bind = Calloc(1, sizeof(trace.sa_bind))) == NULL) {
+        goto clean_sa;
+    }
+    if ((trace.sa_last = Calloc(1, sizeof(trace.sa_last))) == NULL) {
+        goto clean_sa;
+    }
+    trace.sa_bind->sin_family = trace.sa_send->sin_family;
+    trace.sa_bind->sin_port   = htons((getpid() & 0xffff) | (1U << 15));
+    if (Bind(trace.fd_send, (const struct sockaddr *)trace.sa_bind, sizeof(*trace.sa_bind)) == -1) {
+        goto clean_sa;
+    }
+    if ((host = in_sock_ntop(trace.sa_send)) == NULL) {
+        goto clean_sa;
+    }
+    printf("traceroute to %s (%s), %u hops max\n", res->ai_canonname != NULL ? res->ai_canonname : host, host, g_opts.max_hops);
+    ret = 0;
+clean_sa:
+    free(trace.sa_recv);
+    free(trace.sa_bind);
+    free(trace.sa_last);
+clean_fd_recv:
+    close(trace.fd_recv);
+clean_fd_send:
+    close(trace.fd_send);
+clean_res:
+    freeaddrinfo(res);
+end:
+    return (1);
 }
