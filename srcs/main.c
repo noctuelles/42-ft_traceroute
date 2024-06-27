@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:43:13 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 13:45:47 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 13:59:59 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,27 @@ static t_args_parser_option_entry opt_entries[] = {
      .long_key                      = "port",
      .long_key_argument_description = "PORT",
      .description                   = "use destination PORT port (default 33434)"},
+
+    {.has_argument                  = true,
+     .parse_fn                      = parse_tries,
+     .short_key                     = "q",
+     .long_key                      = "tries",
+     .long_key_argument_description = "NUM",
+     .description                   = "send NUM probe packets per hop (default: 3)"},
+
+    {.has_argument                  = true,
+     .parse_fn                      = parse_wait,
+     .short_key                     = "w",
+     .long_key                      = "wait",
+     .long_key_argument_description = "NUM",
+     .description                   = "wait NUM seconds for response (default: 3)"},
+
+    {.has_argument                  = true,
+     .parse_fn                      = parse_resolve_hostnames,
+     .short_key                     = NULL,
+     .long_key                      = "resolve-hostnames",
+     .long_key_argument_description = NULL,
+     .description                   = "resolve hostnames"},
 
     {.has_argument                  = false,
      .parse_fn                      = parse_help,
