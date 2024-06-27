@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:51:08 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 12:22:04 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 13:37:49 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,8 @@
 #include <sys/socket.h>
 #include <time.h>
 
-#include "socket.h"
-
 #define AUTHOR "plouvel"
-#define PROBE_CONTENT "SUPERMAN"
+#define PROBE_CONTENT "42 IS THE ANSWER TO LIFE, THE UNIVERSE AND EVERYTHING"
 
 #define DFT_FIRST_HOP 1u
 #define DFT_MAX_HOPS 64u

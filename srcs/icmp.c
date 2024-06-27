@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 17:51:04 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 12:20:31 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 13:29:13 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ icmp_checksum(void *payload, size_t payload_len) {
 
 /**
  * @brief Decode an incoming raw buffer, and put the IP and ICMP header in the pointers provided.
+ *
  * @param buffer pointer to the buffer
  * @param buffer_size size of the buffer
  * @param p_ip pointer to the pointer that will receive the IP header
@@ -76,6 +77,16 @@ icmp_packet_decode(const uint8_t *buff, size_t buff_size, struct ip **p_ip, stru
     return (0);
 }
 
+/**
+ * @brief Decode an ICMP error message, and put the original IP and UDP headers in the pointers provided.
+ *
+ * @param buff_size size of the buffer returned by recvfrom.
+ * @param ip decoded IP structure.
+ * @param icmp decoded ICMP structure.
+ * @param org_ip result-argument for the failed (original) IP packet.
+ * @param org_udphdr result-argument for the failed (original) UDP packet.
+ * @return int 0 if the packet is valid, -1 a problem occurred.
+ */
 int
 icmp_packet_decode_err_udp(size_t buff_size, const struct ip *ip, const struct icmp *icmp, struct ip **org_ip, struct udphdr **org_udphdr) {
     uint16_t       icmplen      = 0;
@@ -90,10 +101,10 @@ icmp_packet_decode_err_udp(size_t buff_size, const struct ip *ip, const struct i
     p_org_ip = (struct ip *)icmp->icmp_data;
     if (p_org_ip->ip_p != IPPROTO_UDP) {
         /* ICMP Error Message is not the result of an UDP packet. */
-        return (-2);
+        return (-1);
     }
     if (icmplen < ICMP_MINLEN + B_IPHLEN(p_org_ip) + sizeof(struct udphdr)) {
-        /* Not neough data to read the UDP header (without data) from ICMP data. */
+        /* Not enough data to read the UDP header (without data) from ICMP data. */
         return (-1);
     }
     p_org_udphdr = (struct udphdr *)(((uint8_t *)p_org_ip) + B_IPHLEN(p_org_ip));

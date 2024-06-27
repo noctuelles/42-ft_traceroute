@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:43:13 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 13:18:04 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 13:45:47 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,15 +15,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include "ft_args_parser.h"
 #include "ft_traceroute.h"
 #include "parse_opts.h"
-#include "socket.h"
 #include "wrapper.h"
 
+/**
+ * @brief Program options
+ *
+ */
 t_opts g_opts = {
     .port             = DFT_PORT,
     .first_hop        = DFT_FIRST_HOP,
@@ -55,7 +57,7 @@ static t_args_parser_option_entry opt_entries[] = {
 static int
 print_help(const t_args_parser_config *config) {
     printf("Usage: %s [OPTION]... HOST\n", program_invocation_short_name);
-    printf("Print the route packets trace to network host.\n\n");
+    printf("Print the route packets trace to network host (only for ipv4).\n\n");
     ft_args_parser_print_docs(config);
     printf("\nWritten by %s.\n", AUTHOR);
     return (0);
@@ -100,7 +102,8 @@ main(int argc, char **argv) {
         goto clean_sa;
     }
     trace.sa_bind->sin_family = trace.sa_send->sin_family;
-    trace.sa_bind->sin_port   = htons((getpid() & 0xffff) | (1U << 15));
+    trace.sa_bind->sin_port =
+        htons((getpid() & 0xffff) | (1U << 15)); /* Source port is the PID of the current process, with the high-order bit set to one. */
     if (Bind(trace.fd_send, (const struct sockaddr *)trace.sa_bind, trace.sa_len) == -1) {
         goto clean_sa;
     }

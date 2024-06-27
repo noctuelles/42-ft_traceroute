@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 18:31:09 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 13:23:01 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 13:37:10 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,10 +73,14 @@ recv_packet(t_trace_res *trace_res) {
 }
 
 /**
- * @brief During 3 seconds (default value), wait for a response from the remote host.
+ * @brief During 3 seconds (default value), wait for a response from the remote host. An ICMP Error Message which is not targeted to our
+ * current probe is ignored (see recv_packet), and select is rearmed.
  *
  * @param trace_res
  * @return t_res_code RES_CODE_TIMEOUT, RES_CODE_DEST_UNREACH, RES_CODE_TIME_EXCEEDED, RES_CODE_INTERNAL_ERR
+ *
+ * @note From 2020-11-01 SELECT man page : "On  Linux, select() modifies timeout to reflect the amount of time not slept; most other
+ * implementations do not do this."
  */
 static t_res_code
 await_response(t_trace_res *trace_res) {
@@ -108,6 +112,12 @@ get_tv_diff_ms(const struct timeval *tv1, const struct timeval *tv2) {
     return ((tv1->tv_sec - tv2->tv_sec) * 1e3 + (tv1->tv_usec - tv2->tv_usec) / 1e3);
 }
 
+/**
+ * @brief Main loop of the traceroute program.
+ *
+ * @param trace_res trace resources.
+ * @return int 0 on success, -1 on error.
+ */
 int
 ft_traceloop(t_trace_res *trace_res) {
     t_res_code     ret              = 0;
@@ -134,7 +144,7 @@ ft_traceloop(t_trace_res *trace_res) {
                 return (-1);
             } else if (ret == RES_CODE_TIMEOUT) {
                 printf(" *");
-            } else {
+            } else if (ret == RES_CODE_DEST_UNREACH || ret == RES_CODE_TIME_EXCEEDED) {
                 (void)gettimeofday(&recv_tv, NULL);
                 if (ft_memcmp(trace_res->sa_last, trace_res->sa_recv, trace_res->sa_len) != 0) {
                     printf(" %s", in_sock_ntop(trace_res->sa_recv));
