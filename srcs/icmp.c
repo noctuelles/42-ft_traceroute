@@ -6,14 +6,13 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 17:51:04 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/25 17:54:00 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 12:20:31 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#define _DEFAULT_SOURCE
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
-#include <stdlib.h>
+#include "icmp.h"
+
+#include <stddef.h>
 
 /**
  * @brief compute the internet checksum of a payload for an ICMPv4 packet (ICMPv6 is computed by the kernel)
@@ -52,26 +51,53 @@ icmp_checksum(void *payload, size_t payload_len) {
  * @return int 0 if the packet is valid, 1 if the checksum is invalid, -1 if the buffer is too small.
  */
 int
-icmp_packet_decode(const uint8_t *buffer, size_t buffer_size, struct ip **p_ip, struct icmp **p_icmp) {
-    struct ip   *ip            = NULL;
-    struct icmp *icmp          = NULL;
-    size_t       ip_header_len = 0;
-    uint16_t     saved_cksum   = 0;
+icmp_packet_decode(const uint8_t *buff, size_t buff_size, struct ip **p_ip, struct icmp **p_icmp) {
+    uint16_t     icmplen = 0;
+    uint16_t     chksum  = 0;
+    struct ip   *ip      = NULL;
+    struct icmp *icmp    = NULL;
 
-    ip            = (struct ip *)buffer;
-    *p_ip         = ip;
-    ip_header_len = ip->ip_hl << 2U;
-    if (buffer_size < ip_header_len + ICMP_MINLEN) {
+    ip      = (struct ip *)(buff);
+    icmplen = buff_size - B_IPHLEN(ip);
+    if (icmplen < ICMP_MINLEN) {
+        /* Not enough data to read ICMP. */
         return (-1);
     }
-    icmp             = (struct icmp *)(buffer + ip_header_len);
-    *p_icmp          = icmp;
-    saved_cksum      = icmp->icmp_cksum;
+    icmp             = (struct icmp *)(buff + B_IPHLEN(ip));
+    chksum           = icmp->icmp_cksum;
     icmp->icmp_cksum = 0;
-    icmp->icmp_cksum = icmp_checksum(icmp, ntohs(ip->ip_len) - ip_header_len);
-    if (icmp->icmp_cksum != saved_cksum) {
-        return (1);
+    icmp->icmp_cksum = icmp_checksum(icmp, icmplen);
+    if (chksum != icmp->icmp_cksum) {
+        /* Checksum mismatch. */
+        return (-2);
     }
-    icmp->icmp_cksum = saved_cksum;
+    *p_ip   = ip;
+    *p_icmp = icmp;
+    return (0);
+}
+
+int
+icmp_packet_decode_err_udp(size_t buff_size, const struct ip *ip, const struct icmp *icmp, struct ip **org_ip, struct udphdr **org_udphdr) {
+    uint16_t       icmplen      = 0;
+    struct ip     *p_org_ip     = NULL;
+    struct udphdr *p_org_udphdr = NULL;
+
+    icmplen = buff_size - B_IPHLEN(ip);
+    if (icmplen < ICMP_MINLEN + sizeof(struct ip)) {
+        /* Not enough data to read IP header (without options) from ICMP data. */
+        return (-1);
+    }
+    p_org_ip = (struct ip *)icmp->icmp_data;
+    if (p_org_ip->ip_p != IPPROTO_UDP) {
+        /* ICMP Error Message is not the result of an UDP packet. */
+        return (-2);
+    }
+    if (icmplen < ICMP_MINLEN + B_IPHLEN(p_org_ip) + sizeof(struct udphdr)) {
+        /* Not neough data to read the UDP header (without data) from ICMP data. */
+        return (-1);
+    }
+    p_org_udphdr = (struct udphdr *)(((uint8_t *)p_org_ip) + B_IPHLEN(p_org_ip));
+    *org_ip      = p_org_ip;
+    *org_udphdr  = p_org_udphdr;
     return (0);
 }

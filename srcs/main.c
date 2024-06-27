@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:43:13 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/26 16:13:58 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 13:18:04 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ t_opts g_opts = {
     .wait_time        = DFT_WAIT_TIME_SEC,
     .tries            = DFT_TRIES,
     .help             = false,
-    .resolve_hostname = true,
+    .resolve_hostname = false,
 };
 
 extern const char *program_invocation_short_name;

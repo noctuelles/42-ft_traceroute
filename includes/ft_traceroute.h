@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:51:08 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/26 16:09:52 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 12:22:04 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,9 +51,10 @@ typedef struct s_trace_res {
 
 typedef enum e_res_code {
     RES_CODE_INTERAL_ERR = -1,
-    RES_CODE_DONE,
     RES_CODE_TIMEOUT,
-    RES_CODE_KEEP_GOING,
+    RES_CODE_TIME_EXCEEDED,
+    RES_CODE_DEST_UNREACH,
+    RES_CODE_AWAIT,
 } t_res_code;
 
 extern t_opts g_opts;
