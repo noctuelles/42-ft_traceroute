@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:43:13 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 18:48:35 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 18:59:53 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 
 #include "ft_args_parser.h"
 #include "ft_traceroute.h"
+#include "libft.h"
 #include "parse_opts.h"
 #include "wrapper.h"
 
@@ -116,6 +117,10 @@ main(int argc, char **argv) {
     }
     if (g_opts.help) {
         return (print_help(&config));
+    }
+    if (host == NULL) {
+        ft_error(0, 0, "missing HOST argument");
+        return (1);
     }
     if ((res = res_host_serv(host, NULL, AF_INET, SOCK_DGRAM)) == NULL) {
         goto end;
