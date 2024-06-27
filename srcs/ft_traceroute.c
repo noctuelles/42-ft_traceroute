@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 18:31:09 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 14:26:21 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 18:56:45 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,12 +125,12 @@ ft_traceloop(t_trace_res *trace_res) {
     uint32_t       done             = 0;
     struct timeval sent_tv = {0}, recv_tv = {0};
 
-    for (int nhops = g_opts.first_hop; nhops <= g_opts.max_hops && done == 0; nhops++) {
+    for (int nhops = g_opts.first_hop; nhops < g_opts.first_hop + g_opts.max_hops && done == 0; nhops++) {
         if (Setsockopt(trace_res->fd_send, IPPROTO_IP, IP_TTL, &nhops, sizeof(nhops)) == -1) {
             return (-1);
         }
         ft_bzero(trace_res->sa_last, trace_res->sa_len);
-        printf("%2d ", nhops);
+        printf("%2d ", nhops - g_opts.first_hop + 1);
         fflush(stdout);
         for (uint32_t nprobe = 0; nprobe < g_opts.tries; nprobe++) {
             (void)gettimeofday(&sent_tv, NULL);
@@ -143,18 +143,18 @@ ft_traceloop(t_trace_res *trace_res) {
             if (ret == RES_CODE_INTERAL_ERR) {
                 return (-1);
             } else if (ret == RES_CODE_TIMEOUT) {
-                printf(" *");
+                printf("  *");
             } else if (ret == RES_CODE_DEST_UNREACH || ret == RES_CODE_TIME_EXCEEDED) {
                 (void)gettimeofday(&recv_tv, NULL);
                 if (ft_memcmp(trace_res->sa_last, trace_res->sa_recv, trace_res->sa_len) != 0) {
-                    printf(" %s", in_sock_ntop(trace_res->sa_recv));
+                    printf("  %s", in_sock_ntop(trace_res->sa_recv));
                     if (g_opts.resolve_hostname &&
                         getnameinfo((const struct sockaddr *)trace_res->sa_recv, trace_res->sa_len, host, sizeof(host), NULL, 0, 0) == 0) {
                         printf(" (%s)", host);
                     }
                     ft_memcpy(trace_res->sa_last, trace_res->sa_recv, trace_res->sa_len);
                 }
-                printf(" %.2fms", get_tv_diff_ms(&recv_tv, &sent_tv));
+                printf("  %.3fms", get_tv_diff_ms(&recv_tv, &sent_tv));
                 if (ret == RES_CODE_DEST_UNREACH) {
                     done = done + 1;
                 }
