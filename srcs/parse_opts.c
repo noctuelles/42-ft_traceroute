@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:46:38 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 13:58:42 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 14:24:42 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 #define INVALID_PORT_NUMBER_STR "invalid port number"
 #define NBR_TRIES_STR "number of tries must be between 1 and 10"
 #define NBR_WAIT_TIME_STR "ridiculous waiting time"
+#define IMPOSSIBLE_DISTANCE_STR "impossible distance"
+#define INVALID_HOPS_VALUE_STR "invalid hops value"
 
 int
 parse_port(const char *argument, t_args_parser_state *state, void *input) {
@@ -99,6 +101,54 @@ parse_wait(const char *argument, t_args_parser_state *state, void *input) {
     return (0);
 err:
     state->error_message = NBR_WAIT_TIME_STR;
+    state->print_arg     = true;
+    return (-1);
+}
+
+int
+parse_first_hop(const char *argument, t_args_parser_state *state, void *input) {
+    (void)input;
+
+    int rslt = 0;
+
+    if (!ft_strmatch_uint(argument)) {
+        goto err;
+    }
+    if (ft_strlen(argument) > 3) {
+        goto err;
+    }
+    rslt = ft_atoi(argument);
+    if (!(rslt >= 1 && rslt <= 254)) {
+        goto err;
+    }
+    g_opts.first_hop = (uint8_t)rslt;
+    return (0);
+err:
+    state->error_message = IMPOSSIBLE_DISTANCE_STR;
+    state->print_arg     = true;
+    return (-1);
+}
+
+int
+parse_max_hop(const char *argument, t_args_parser_state *state, void *input) {
+    (void)input;
+
+    int rslt = 0;
+
+    if (!ft_strmatch_uint(argument)) {
+        goto err;
+    }
+    if (ft_strlen(argument) > 3) {
+        goto err;
+    }
+    rslt = ft_atoi(argument);
+    if (!(rslt >= 1 && rslt <= 255)) {
+        goto err;
+    }
+    g_opts.max_hops = (uint8_t)rslt;
+    return (0);
+err:
+    state->error_message = INVALID_HOPS_VALUE_STR;
     state->print_arg     = true;
     return (-1);
 }

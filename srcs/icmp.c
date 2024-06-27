@@ -6,13 +6,14 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/25 17:51:04 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 13:29:13 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 14:14:16 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "icmp.h"
 
 #include <stddef.h>
+#include <stdio.h>
 
 /**
  * @brief compute the internet checksum of a payload for an ICMPv4 packet (ICMPv6 is computed by the kernel)
@@ -101,6 +102,7 @@ icmp_packet_decode_err_udp(size_t buff_size, const struct ip *ip, const struct i
     p_org_ip = (struct ip *)icmp->icmp_data;
     if (p_org_ip->ip_p != IPPROTO_UDP) {
         /* ICMP Error Message is not the result of an UDP packet. */
+        puts("not udp");
         return (-1);
     }
     if (icmplen < ICMP_MINLEN + B_IPHLEN(p_org_ip) + sizeof(struct udphdr)) {

@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:43:13 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 13:59:59 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 14:25:06 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,20 @@ static t_args_parser_option_entry opt_entries[] = {
      .long_key                      = "wait",
      .long_key_argument_description = "NUM",
      .description                   = "wait NUM seconds for response (default: 3)"},
+
+    {.has_argument                  = true,
+     .parse_fn                      = parse_first_hop,
+     .short_key                     = "f",
+     .long_key                      = "first-hop",
+     .long_key_argument_description = "NUM",
+     .description                   = "set initial hop distance, i.e., time-to-live"},
+
+    {.has_argument                  = true,
+     .parse_fn                      = parse_max_hop,
+     .short_key                     = "m",
+     .long_key                      = "max-hop",
+     .long_key_argument_description = "NUM",
+     .description                   = "set maximal hop count (default: 64)"},
 
     {.has_argument                  = true,
      .parse_fn                      = parse_resolve_hostnames,

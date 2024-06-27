@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 18:31:09 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 13:37:10 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/27 14:26:21 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,7 @@ ft_traceloop(t_trace_res *trace_res) {
     uint32_t       done             = 0;
     struct timeval sent_tv = {0}, recv_tv = {0};
 
-    for (int nhops = g_opts.first_hop; nhops < g_opts.max_hops && done == 0; nhops++) {
+    for (int nhops = g_opts.first_hop; nhops <= g_opts.max_hops && done == 0; nhops++) {
         if (Setsockopt(trace_res->fd_send, IPPROTO_IP, IP_TTL, &nhops, sizeof(nhops)) == -1) {
             return (-1);
         }
@@ -163,5 +163,5 @@ ft_traceloop(t_trace_res *trace_res) {
         }
         printf("\n");
     }
-    return (0);
+    return (done == 0 ? -1 : 0);
 }
