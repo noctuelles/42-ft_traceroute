@@ -1,4 +1,5 @@
 /*
+!assets
 !includes
 !srcs
 !libft
@@ -9,3 +10,4 @@
 !.gitignore
 !.gitsubmodules
 !en.subject.pdf
+!README.md
