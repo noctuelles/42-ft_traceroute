@@ -60,6 +60,24 @@ If we launch the *GNU inetutils* **traceroute** distinctively two times and exam
 
 Do you think you're out of the woods ? There's still two **issue**.
 
-### Not mixing up ICMP messages in case of late probe replies, and network host port already in use.
+### Not mixing probes response from different hops...
 
-#### (WIP)
+![Traceroute example](./assets//readme/traceroute_use_2.png)
+
+Let's take a look at the above screenshot :
+
+- On the first hop, the distant router received our probes and sent back the ICMP error message.
+- On the second hop, the distant router didn't answered to our probes : each `*` means a timeout : the router didn't send back any ICMP error message within the 3 seconds delay. Do consider that the message is maybe still in transit, or lost...
+- On the third hop, same as the first, but, imagine some IMCP error message for the second hop are still in transit, and we receive them while looping on the third hop, we could mix up the ICMP messages.
+
+What could we use to avoid this... ? The **destination port** of the UDP datagram.
+
+This the Wireshark capture of the **traceroute** we did on the last screenshot :
+
+![](./assets/readme/traceroute_wireshark_use_2.png)
+
+> *(the DNS packet is a result of calling `getaddrinfo`...)*
+
+We can see that for a hop **n**, the destination port is set to **33434 + n**. So, if we're on the *n* hop, and we receive an ICMP error message content with the destination port set to **33434 + n - 1**, we can discard it as it's not related to the current hop.
+
+This also solves the issue of the network host already using the destination port : since we increment for each hop, there're is a good chance that we might came across a free port and receive the **Destination Unreachable**, **Port Unreachable** ICMP message. If we were to use the same port **p** for all the probes, and the network host is using **p**, we would never receive such ICMP message, and the program would loop indefinitely.
