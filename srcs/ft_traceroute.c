@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 18:31:09 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 18:56:45 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/06/29 17:25:36 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,32 +79,30 @@ recv_packet(t_trace_res *trace_res) {
  * @param trace_res
  * @return t_res_code RES_CODE_TIMEOUT, RES_CODE_DEST_UNREACH, RES_CODE_TIME_EXCEEDED, RES_CODE_INTERNAL_ERR
  *
- * @note From 2020-11-01 SELECT man page : "On  Linux, select() modifies timeout to reflect the amount of time not slept; most other
- * implementations do not do this."
+ * @note From 2020-11-01 SELECT man page : "On Linux, select() modifies timeout to reflect the amount of time not slept; most other
+ * implementations do not do this.". Since the project is intended to be run on Linux, we can assume that the timeout value is
+ * modified by select.
  */
 static t_res_code
-await_response(t_trace_res *trace_res) {
+await_probe_response(t_trace_res *trace_res) {
     fd_set         readfds;
     struct timeval timeout;
     t_res_code     ret = RES_CODE_AWAIT;
 
     FD_ZERO(&readfds);
-    FD_SET(trace_res->fd_recv, &readfds);
     timeout.tv_sec  = g_opts.wait_time != 0 ? g_opts.wait_time : DFT_WAIT_TIME_SEC;
     timeout.tv_usec = 0;
-    while (true) {
+    while (ret == RES_CODE_AWAIT) {
+        FD_SET(trace_res->fd_recv, &readfds);
         if ((ret = Select(trace_res->fd_recv + 1, &readfds, NULL, NULL, &timeout)) == -1) {
-            return (RES_CODE_INTERAL_ERR);
+            ret = RES_CODE_INTERAL_ERR;
         } else if (ret == 0) {
-            return (RES_CODE_TIMEOUT);
+            ret = RES_CODE_TIMEOUT;
         } else {
             ret = recv_packet(trace_res);
-            if (ret != RES_CODE_AWAIT) {
-                return (ret);
-            }
         }
     }
-    return (RES_CODE_INTERAL_ERR);
+    return (ret);
 }
 
 static double
@@ -139,7 +137,7 @@ ft_traceloop(t_trace_res *trace_res) {
                        trace_res->sa_len) == -1) {
                 return (-1);
             }
-            ret = await_response(trace_res);
+            ret = await_probe_response(trace_res);
             if (ret == RES_CODE_INTERAL_ERR) {
                 return (-1);
             } else if (ret == RES_CODE_TIMEOUT) {
