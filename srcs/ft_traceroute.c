@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/24 18:31:09 by plouvel           #+#    #+#             */
-/*   Updated: 2024/07/02 10:52:31 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/02 12:39:56 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,7 +128,7 @@ ft_traceloop(t_trace_res *trace_res) {
             return (-1);
         }
         ft_bzero(trace_res->sa_last, trace_res->sa_len);
-        printf("%2d ", nhops);
+        printf("%3d ", nhops);
         fflush(stdout);
         for (uint32_t nprobe = 0; nprobe < g_opts.tries; nprobe++) {
             (void)gettimeofday(&sent_tv, NULL);
