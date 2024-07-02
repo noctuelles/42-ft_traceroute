@@ -6,7 +6,7 @@
 /*   By: plouvel <plouvel@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/22 22:51:08 by plouvel           #+#    #+#             */
-/*   Updated: 2024/06/27 13:37:49 by plouvel          ###   ########.fr       */
+/*   Updated: 2024/07/02 10:48:09 by plouvel          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #include <time.h>
 
 #define AUTHOR "plouvel"
-#define PROBE_CONTENT "42 IS THE ANSWER TO LIFE, THE UNIVERSE AND EVERYTHING"
+#define PROBE_CONTENT "42424242"
 
 #define DFT_FIRST_HOP 1u
 #define DFT_MAX_HOPS 64u
